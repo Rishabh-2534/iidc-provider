@@ -1,0 +1,27 @@
+{
+  "name": "poc-oidc-provider",
+  "version": "2.0.0",
+  "description": "Multi-tenant POC for node-oidc-provider with dynamic configuration",
+  "main": "src/provider.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/provider.js",
+    "config-service": "node src/services/config-service.js",
+    "start:all": "concurrently \"npm run config-service\" \"npm start\"",
+    "client:auth-code": "node src/clients/auth-code-client-with-approval.js",
+    "client:credentials": "node src/clients/client-credentials-client.js",
+    "demo:revocation": "node src/clients/revocation-demo.js"
+  },
+  "keywords": ["oidc", "oauth2", "multi-tenant", "scalable", "authorization-code", "client-credentials"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "oidc-provider": "^8.4.3",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
