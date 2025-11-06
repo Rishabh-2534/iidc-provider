@@ -32,27 +32,13 @@ class BlacklistService {
     return true;
   }
   
-  static async remove(tid) {
-    const existed = blacklist.has(tid);
-    blacklist.delete(tid);
-    return existed;
-  }
   
-  static async getInfo(tid) {
-    return blacklist.get(tid);
-  }
   
-  static async size() {
-    return blacklist.size;
-  }
   
   static async getAll() {
     return Array.from(blacklist.values());
   }
   
-  static async clear() {
-    blacklist.clear();
-  }
   
   static async addBatch(tokens) {
     const results = [];

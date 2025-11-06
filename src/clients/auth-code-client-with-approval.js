@@ -6,13 +6,13 @@ import crypto from 'crypto';
 const CLIENT_ID = 'tenant-a-web-app';
 const CLIENT_SECRET = 'tenant-a-web-secret-12345';
 const REDIRECT_URI = 'http://localhost:3001/callback';
-const AUTHORIZATION_URI = 'http://localhost:3001/authorize';
 const ISSUER = 'http://localhost:3000';
 const CALLBACK_PORT = 3001;
 
 const AUTHORIZATION_ENDPOINT = `${ISSUER}/auth`;
 const TOKEN_ENDPOINT = `${ISSUER}/token`;
 const USERINFO_ENDPOINT = `${ISSUER}/me`;
+const TENANT_ID = process.env.DEMO_TENANT_ID || 'c8b9e598-fc09-4e46-8977-ebc4f40fda19';
 
 const state = crypto.randomBytes(16).toString('hex');
 
@@ -21,16 +21,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 let tokens = null;
-let pendingInteraction = null;
 
 app.get('/', (req, res) => {
   const authParams = new URLSearchParams({
+    tenant_id: TENANT_ID,
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
     response_type: 'code',
-    scope: 'openid email profile offline_access',//remove offline_access for only access token
+    scope: 'User:Read profile email offline_access',//User.Read User.ReadWrite Users.Read.All Sites.ReadWrite.All,//remove offline_access for only access token
     state: state,
+    resource: 'urn:api', // IMPORTANT for jwt access token
+    prompt: 'consent', // Temporarily removed to test if flow works without it
   });
+  
+  console.log('CLIENT: Authorization URL being constructed:');
+  console.log('  Full auth URL:', `${ISSUER}/auth?${authParams.toString()}`);
 
   const authUrl = `${AUTHORIZATION_ENDPOINT}?${authParams.toString()}`;
 
@@ -59,7 +64,7 @@ app.get('/', (req, res) => {
         </div>
         
         <a href="${authUrl}" class="login-btn">
-          🚀 Login with OIDC Provider
+           Login with OIDC Provider
         </a>
         
         <p style="margin-top: 30px; color: #666; font-size: 14px;">
@@ -233,16 +238,11 @@ app.get('/callback', async (req, res) => {
     });
 
     const tokenResponse = await axios.post(TOKEN_ENDPOINT, tokenParams.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-tenant-id': TENANT_ID },
     });
 
     tokens = tokenResponse.data;
 
-    const userInfoResponse = await axios.get(USERINFO_ENDPOINT, {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
-    });
-
-    const userInfo = userInfoResponse.data;
 
     res.send(`
       <html>
@@ -259,17 +259,17 @@ app.get('/callback', async (req, res) => {
         <div class="success">
           <h2>✅ Authorization Successful</h2>
           <h3>Access Token:</h3>
-          <pre>${tokens.access_token.substring(0, 50)}...</pre>
-          ${tokens.refresh_token ? `<h3>Refresh Token:</h3><pre>${tokens.refresh_token.substring(0, 50)}...</pre>` : ''}
-          ${tokens.id_token ? `<h3>ID Token:</h3><pre>${tokens.id_token.substring(0, 50)}...</pre>` : ''}
+          <pre>${tokens.access_token}</pre>
+          ${tokens.refresh_token ? `<h3>Refresh Token:</h3><pre>${tokens.refresh_token}</pre>` : ''}
+          ${tokens.id_token ? `<h3>ID Token:</h3><pre>${tokens.id_token}</pre>` : ''}
           <h3>Token Details:</h3>
           <pre>${JSON.stringify({
             token_type: tokens.token_type,
             expires_in: tokens.expires_in,
             scope: tokens.scope
           }, null, 2)}</pre>
-          <h3>User Info:</h3>
-          <pre>${JSON.stringify(userInfo, null, 2)}</pre>
+          
+          
         </div>
       </body>
       </html>

@@ -4,6 +4,7 @@ import { URLSearchParams } from 'url';
 const CLIENT_ID = 'tenant-a-api-client';
 const CLIENT_SECRET = 'tenant-a-api-secret-12345';
 const ISSUER = 'http://localhost:3000';
+const TENANT_ID = process.env.DEMO_TENANT_ID || 'c8b9e598-fc09-4e46-8977-ebc4f40fda19';
 
 const TOKEN_ENDPOINT = `${ISSUER}/token`;
 const INTROSPECTION_ENDPOINT = `${ISSUER}/token/introspection`;
@@ -15,15 +16,19 @@ async function runClientCredentialsFlow() {
       scope: 'api:read api:write',
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
+      resource: 'urn:api', // IMPORTANT for jwt access token
     });
 
     const tokenResponse = await axios.post(TOKEN_ENDPOINT, tokenParams.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'x-tenant-id': TENANT_ID,
+      },
     });
 
     const tokens = tokenResponse.data;
     
-    console.log('\nAccess Token:', tokens.access_token.substring(0, 30), '...');
+    console.log('\nAccess Token:', tokens.access_token);
     console.log('Token Type:', tokens.token_type);
     console.log('Expires In:', tokens.expires_in, 's');
     console.log('Scope:', tokens.scope || 'N/A');
@@ -37,7 +42,7 @@ async function runClientCredentialsFlow() {
     const introspectionResponse = await axios.post(
       INTROSPECTION_ENDPOINT,
       introspectionParams.toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'x-tenant-id': TENANT_ID } }
     );
 
     console.log('\nIntrospection:', JSON.stringify(introspectionResponse.data, null, 2));

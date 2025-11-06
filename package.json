@@ -12,14 +12,24 @@
     "client:credentials": "node src/clients/client-credentials-client.js",
     "demo:revocation": "node src/clients/revocation-demo.js"
   },
-  "keywords": ["oidc", "oauth2", "multi-tenant", "scalable", "authorization-code", "client-credentials"],
+  "keywords": [
+    "oidc",
+    "oauth2",
+    "multi-tenant",
+    "scalable",
+    "authorization-code",
+    "client-credentials"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "oidc-provider": "^8.4.3",
     "axios": "^1.6.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jose": "^6.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
+    "oidc-provider": "^8.4.3"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

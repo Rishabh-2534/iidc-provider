@@ -9,7 +9,7 @@ const users = new Map([
     email_verified: true,
     name: 'John Doe',
     preferred_username: 'johndoe',
-    allowOfflineAccess: false,
+    allowOfflineAccess: false, // User1 does not allow offline access
   }],
   ['user2', {
     accountId: 'user2',
@@ -17,7 +17,7 @@ const users = new Map([
     email_verified: true,
     name: 'Jane Smith',
     preferred_username: 'janesmith',
-    allowOfflineAccess: true,
+    allowOfflineAccess: true, // User2 allows offline access
   }],
 ]);
 
@@ -54,17 +54,5 @@ export class Account {
     return new Account(id, account);
   }
 
-  static async authenticate(username, password) {
-    // Simple authentication - in production, verify password hash
-    const user = Array.from(users.values()).find(
-      u => u.email === username || u.preferred_username === username
-    );
-    
-    if (user && password === 'password123') {
-      return user.accountId;
-    }
-    
-    return null;
-  }
 }
 

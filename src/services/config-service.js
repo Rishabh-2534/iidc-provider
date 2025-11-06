@@ -24,8 +24,8 @@ const CONFIG_PORT = 4000;
 // In-memory configuration store (in production, this would be a database)
 // Structure matches actual API response format
 const tenantConfigurations = {
-  'tenant-a': {
-    tenantId: 'tenant-a',
+    'c8b9e598-fc09-4e46-8977-ebc4f40fda19': {
+    tenantId: 'c8b9e598-fc09-4e46-8977-ebc4f40fda19',
     tenantName: 'Acme Corporation',
     clients: [
       {
@@ -36,7 +36,7 @@ const tenantConfigurations = {
         client_id: 'tenant-a-web-app',
         client_secret: 'tenant-a-web-secret-12345',
         redirect_uri: 'http://localhost:3001/callback',
-        auth_grant_type: 'Authorization Code',
+        auth_grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
         state_param_supported: true,
         account_id: 'acme-account-001',
         authorization_uri: 'http://localhost:3001/authorize', // App's authorization page
@@ -44,7 +44,7 @@ const tenantConfigurations = {
           authorizationCodeGrant: {
             isEnabled: true,
             redirectUris: ['http://localhost:3001/callback'],
-            allowedScopes: ['openid', 'profile', 'email', 'offline_access'],
+            allowedScopes: ['openid', 'profile', 'email', 'offline_access', 'User:Read'],
             supportStateParameter: true,
             accessTokenLifeInSeconds: 7200,      // 2 hours
             refreshTokenLifeInSeconds: 604800,    // 7 days
@@ -127,7 +127,7 @@ const tenantConfigurations = {
         client_id: 'tenant-b-web-app',
         client_secret: 'tenant-b-web-secret-67890',
         redirect_uri: 'http://localhost:3002/callback',
-        auth_grant_type: 'Authorization Code',
+        auth_grant_type:  'urn:ietf:params:oauth:grant-type:jwt-bearer',
         state_param_supported: true,
         account_id: 'beta-account-002',
         authorization_uri: 'http://localhost:3002/authorize',

@@ -1,5 +1,7 @@
 import ClientService from '../services/client.service.js';
 import { Account } from '../config/accounts.js';
+import TenantService from '../services/tenant.service.js';
+const { getStorage } = await import('../config/adapter.js');
 
 class InteractionController {
   static async showAuthorization(req, res, oidc) {
@@ -100,7 +102,14 @@ class InteractionController {
             <p>This application is requesting access to:</p>
             <div class="scope-list">
               <strong>Permissions:</strong><br>
-              ${(params.scope || '').split(' ').map(s => `• ${s}`).join('<br>')}
+              ${
+                (params.scope || '')
+                  .split(' ')
+                  .filter(Boolean)
+                  .map(s => (s === 'offline_access' ? 'offline access' : s))
+                  .map(s => `• ${s}`)
+                  .join('<br>')
+              }
             </div>
             <form method="POST" action="/interaction/${uid}/callback">
               <div class="user-select">
@@ -126,6 +135,7 @@ class InteractionController {
   static async handleCallback(req, res, oidc) {
     try {
       const { approved, user_id, denied } = req.body;
+      console.log('handleCallback called with:', { approved, user_id, denied });
 
       if (denied === 'true') {
         const result = {
@@ -142,32 +152,44 @@ class InteractionController {
 
       const interactionDetails = await oidc.interactionDetails(req, res);
       const { params } = interactionDetails;
+      console.log('Interaction details:', { params });
+      
+      // Let the OIDC provider handle session management through the interaction result
+      console.log('Using OIDC provider session management');
+      
+      const tenantId = TenantService.resolveTenantIdFromExpress(req);
+      if (!tenantId) {
+        return res.status(400).send('Missing tenant id');
+      }
 
+      const account = await Account.findAccount(null, user_id);
+      console.log('Found account:', account);
+      
       const grant = new oidc.Grant({ accountId: user_id, clientId: params.client_id });
-
+      
+      // Add all requested scopes to the grant (no filtering - let OIDC provider handle it)
       if (params.scope) {
-        const scopes = params.scope.split(' ');
-        const standardOIDCScopes = ['openid', 'offline_access', 'profile', 'email', 'address', 'phone'];
-        const account = await Account.findAccount(null, user_id);
-        const isOfflineAllowed = Boolean(account?.allowOfflineAccess);
-        const oidcScopes = scopes
-          .filter(s => standardOIDCScopes.includes(s))
-          .filter(s => s !== 'offline_access' || isOfflineAllowed);
-        const resourceScopes = scopes.filter(s => !standardOIDCScopes.includes(s));
-
-        if (oidcScopes.length > 0) grant.addOIDCScope(oidcScopes.join(' '));
-        if (resourceScopes.length > 0) grant.addResourceScope('', resourceScopes.join(' '));
+        grant.addOIDCScope(params.scope);
+        console.log('Added scopes to grant:', params.scope);
+        console.log('Grant openid.scope after addOIDCScope:', grant.openid?.scope);
       }
 
       const grantId = await grant.save();
+      console.log('Created grant with ID:', grantId);
+      console.log('Grant openid.scope after save:', grant.openid?.scope);
+      console.log('Grant scopes (computed):', grant.scopes);
 
       const result = {
         login: { accountId: user_id, remember: false },
         consent: { grantId },
       };
+      console.log('Interaction result:', result);
 
+      // Let the OIDC provider handle everything automatically
       await oidc.interactionFinished(req, res, result, { mergeWithLastSubmission: true });
+      console.log('Interaction finished successfully');
     } catch (error) {
+      console.error('Error in handleCallback:', error);
       res.status(500).send(`Error: ${error.message}`);
     }
   }
