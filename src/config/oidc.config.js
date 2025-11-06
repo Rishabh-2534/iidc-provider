@@ -25,7 +25,7 @@ export function createOIDCConfig() {
       console.log(`🏢 Creating ${name} adapter for tenant: ${tenantId}`);
       return new MemoryAdapter(name, tenantId);
     },
-   // findAccount: Account.findAccount,
+    findAccount: Account.findAccount,
     
    cookies: {
       keys: ['some-stable-secret'],

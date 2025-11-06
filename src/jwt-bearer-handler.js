@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 //import { demoPublicKeyPEM } from './demo-keys.js';
 import { errors } from 'oidc-provider';
-
+import checkResource  from 'oidc-provider/lib/shared/check_resource.js';
 export default async function jwtBearerHandler(ctx, next) {
   const { assertion, scope } = ctx.oidc.params;
   const client = ctx.oidc.client;
@@ -25,16 +25,29 @@ export default async function jwtBearerHandler(ctx, next) {
 */
   // Issue Access Token
   const AccessToken = provider.AccessToken;
+  
   const token = new AccessToken({
     accountId: "tenant a",
     client,
     grantId: 'jgfkufyuk',//provider.uuid(),
     scope: 'User:Read',
-    resource: 'urn:api',
+    /*resourceServer: {
+        audience: 'urn:api',
+    },*/
     format: 'jwt',
-  audience: 'urn:api',
 
   });
+  await checkResource(ctx, () => {});
+  const { 0: resourceServer, length } = Object.values(ctx.oidc.resourceServers);
+  console.log(ctx.oidc);
+  if (resourceServer) {
+    if (length !== 1) {
+      throw new InvalidTarget('only a single resource indicator value is supported for this grant type');
+    }
+    token.resourceServer = resourceServer;
+  }
+  console.log('resourceServer', resourceServer);
+
 
   const result=await token.save();
   console.log('result', result);
